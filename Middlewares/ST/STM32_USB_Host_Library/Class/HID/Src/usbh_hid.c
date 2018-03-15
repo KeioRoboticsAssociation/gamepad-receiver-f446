@@ -128,6 +128,10 @@ USBH_ClassTypeDef  HID_Class =
 * @{
 */ 
 
+USBH_StatusTypeDef NoopInit(USBH_HandleTypeDef *phost)
+{
+  return USBH_OK;
+}
 
 /**
   * @brief  USBH_HID_InterfaceInit 
@@ -144,8 +148,8 @@ static USBH_StatusTypeDef USBH_HID_InterfaceInit (USBH_HandleTypeDef *phost)
   USBH_StatusTypeDef status = USBH_FAIL ;
   HID_HandleTypeDef *HID_Handle;
   
-  interface = USBH_FindInterface(phost, phost->pActiveClass->ClassCode, HID_BOOT_CODE, 0xFF);
-  
+//  interface = USBH_FindInterface(phost, phost->pActiveClass->ClassCode, HID_BOOT_CODE, 0xFF);
+  interface = USBH_FindInterface(phost, phost->pActiveClass->ClassCode, 0xFF, 0xFF);
   if(interface == 0xFF) /* No Valid Interface */
   {
     status = USBH_FAIL;  
@@ -171,8 +175,9 @@ static USBH_StatusTypeDef USBH_HID_InterfaceInit (USBH_HandleTypeDef *phost)
     }
     else
     {
-      USBH_UsrLog ("Protocol not supported.");  
-      return USBH_FAIL;
+        HID_Handle->Init = NoopInit;
+//      USBH_UsrLog ("Protocol not supported.");  
+//      return USBH_FAIL;
     }
     
     HID_Handle->state     = HID_INIT;
