@@ -368,6 +368,8 @@ static USBH_StatusTypeDef USBH_HID_Process(USBH_HandleTypeDef *phost)
   {
   case HID_INIT:
     HID_Handle->Init(phost); 
+    HID_Handle->state = HID_SYNC;
+    break;
   case HID_IDLE:
     if(USBH_HID_GetReport (phost,
                            0x01,
@@ -659,7 +661,8 @@ HID_TypeTypeDef USBH_HID_GetDeviceType(USBH_HandleTypeDef *phost)
 {
   HID_TypeTypeDef   type = HID_UNKNOWN;
   
-  if(phost->gState == HOST_CLASS)
+  //if(phost->gState == HOST_CLASS)
+  if (phost->gState >= HOST_ENUMERATION && phost->gState <= HOST_SUSPENDED)
   {
     
     if(phost->device.CfgDesc.Itf_Desc[phost->device.current_interface].bInterfaceProtocol \
