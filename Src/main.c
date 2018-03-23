@@ -53,8 +53,7 @@
 #include "gpio.h"
 
 /* USER CODE BEGIN Includes */
-#include "usbh_def.h"
-#include "usbh_hid.h"
+#include "user_main.h"
 
 /* USER CODE END Includes */
 
@@ -62,7 +61,6 @@
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-uint8_t reportBuf[104]; // TODO: Buf size less than 104 doesn't work, but idk why.
 
 /* USER CODE END PV */
 
@@ -76,22 +74,6 @@ void MX_USB_HOST_Process(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
-void USBH_HID_EventCallback(USBH_HandleTypeDef *phost)
-{
-  // printf("B\n");
-  // fifo_read(&(((HID_HandleTypeDef *) phost->pActiveClass->pData)->fifo), reportBuf, 6);
-  fifo_read(&(((HID_HandleTypeDef *) phost->pActiveClass->pData)->fifo), reportBuf, 8);
-  printf("Report: ");
-  // for (size_t i = 0; i < 6; i++) {
-  for (size_t i = 0; i < 8; i++) {
-    // printf("%02x", reportBuf[i]);
-    for (uint8_t bit = 0x01; bit != 0; bit <<= 1) {
-      putchar(reportBuf[i] & bit ? '1' : '0');
-    }
-    putchar(' ');
-  }
-  putchar('\n');
-}
 
 /* USER CODE END 0 */
 
@@ -127,14 +109,7 @@ int main(void)
   MX_USART2_UART_Init();
   MX_USB_HOST_Init();
   /* USER CODE BEGIN 2 */
-  extern USBH_HandleTypeDef hUsbHostFS;
-  extern ApplicationTypeDef Appli_state;
-  ApplicationTypeDef stateA = Appli_state;
-  HOST_StateTypeDef stateH = hUsbHostFS.gState;
-  int flag = 0;
-  printf("Start\n");
-  printf("H: %d, ", stateH);
-  printf("A: %d\n", stateA);
+  userInit();
 
   /* USER CODE END 2 */
 
@@ -142,32 +117,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    if (Appli_state != stateA || hUsbHostFS.gState != stateH) {
-      stateA = Appli_state;
-      stateH = hUsbHostFS.gState;
-      printf("H: %d, ", stateH);
-      printf("A: %d\n", stateA);
-    }
-    if (stateA == APPLICATION_READY && !flag) {
-      printf("Connected\n");
-      flag = 1;
-      size_t reportDescLength = ((HID_HandleTypeDef *) hUsbHostFS.pActiveClass->pData)->HID_Desc.wItemLength;
-      printf("Report Descriptor: ");
-      for (size_t i = 0; i < reportDescLength; i++) {
-        printf("%02x", hUsbHostFS.device.Data[i]);
-      }
-      putchar('\n');
-      // ((HID_HandleTypeDef *) hUsbHostFS.pActiveClass->pData)->length = 6;
-      ((HID_HandleTypeDef *) hUsbHostFS.pActiveClass->pData)->length = 8;
-      fifo_init(&(((HID_HandleTypeDef *) hUsbHostFS.pActiveClass->pData)->fifo), hUsbHostFS.device.Data, 32);
-      // printf("A\n");
-    //} else if (stateH == HOST_ABORT_STATE && !flag) {
-      //  printf("abort\n");
-      //  flag = 1;
-    } else if (Appli_state == APPLICATION_DISCONNECT && flag) {
-      printf("Disconnected\n");
-      flag = 0;
-    }
+    userMain();
 
   /* USER CODE END WHILE */
     MX_USB_HOST_Process();
