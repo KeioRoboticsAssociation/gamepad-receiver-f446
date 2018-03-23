@@ -16,8 +16,7 @@ namespace {
 extern USBH_HandleTypeDef hUsbHostFS;
 extern ApplicationTypeDef Appli_state;
 
-void USBH_HID_EventCallback(USBH_HandleTypeDef *phost)
-{
+void USBH_HID_EventCallback(USBH_HandleTypeDef* phost) {
   // printf("B\n");
   // fifo_read(&(((HID_HandleTypeDef *) phost->pActiveClass->pData)->fifo), reportBuf, 6);
   fifo_read(&(((HID_HandleTypeDef*) phost->pActiveClass->pData)->fifo), reportBuf, 8);
@@ -34,8 +33,7 @@ void USBH_HID_EventCallback(USBH_HandleTypeDef *phost)
   HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, reportBuf[4] & 0x01 << 5 ? GPIO_PIN_SET : GPIO_PIN_RESET);
 }
 
-void userInit()
-{
+void userInit() {
   ApplicationTypeDef stateA = Appli_state;
   HOST_StateTypeDef stateH = hUsbHostFS.gState;
   printf("Start\n");
@@ -43,8 +41,7 @@ void userInit()
   printf("A: %d\n", stateA);
 }
 
-void userMain()
-{
+void userMain() {
   if (Appli_state != stateA || hUsbHostFS.gState != stateH) {
     stateA = Appli_state;
     stateH = hUsbHostFS.gState;

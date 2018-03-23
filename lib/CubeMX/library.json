@@ -1,0 +1,17 @@
+{
+  "name": "CubeMX",
+  "version": "0.0.0",
+  "build": {
+    "flags": [
+      "-IInc",
+      "-IMiddlewares/ST/STM32_USB_Host_Library/Core/Inc",
+      "-IMiddlewares/ST/STM32_USB_Host_Library/Class/HID/Inc"
+    ],
+    "srcFilter": [
+      "+<*>",
+      "-<Drivers/>"
+    ],
+    "extraScript" :"scripts/hal_conf.py",
+    "libArchive": false
+  }
+}

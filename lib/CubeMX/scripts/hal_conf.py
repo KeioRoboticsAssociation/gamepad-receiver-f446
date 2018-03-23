@@ -11,7 +11,7 @@ orig_path = os.path.join(env.PioPlatform().get_package_dir('framework-stm32cube'
 temp = tempfile.mkdtemp()
 
 shutil.move(orig_path, temp)
-shutil.copy2(os.path.join('Inc', file_name), orig_path)
+shutil.copy2(os.path.join(os.path.dirname(os.path.abspath('__file__')), '../', 'Inc', file_name), orig_path)
 
 @atexit.register
 def restore():
