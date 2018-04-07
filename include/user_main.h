@@ -5,6 +5,8 @@
 extern "C" {
 #endif
 
+void onTimer6();
+
 void userInit();
 
 void userMain();
