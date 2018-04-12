@@ -1,21 +1,29 @@
 #include "user_main.h"
 
 #include <memory>
+#include <stddef.h>
+#include <stdint.h>
 
-#include <main.h>
 #include <stm32f4xx_hal.h>
+#include <can.h>
+#include <gpio.h>
+#include <tim.h>
 #include <usb_host.h>
 #include <usbh_hid.h>
 
 #include "report_parser.h"
 
 namespace {
+  const uint32_t CAN_ID = 0x334;
+
   ApplicationTypeDef stateA;
   HOST_StateTypeDef stateH;
   std::unique_ptr<ReportParser> parser;
   std::unique_ptr<uint8_t[]> reportBuf;
   bool ready = false;
   bool received = false;
+  CAN_TxHeaderTypeDef canHeader = {CAN_ID, 0, CAN_RTR_DATA, CAN_ID_STD, 0, DISABLE};
+  uint32_t canMailbox;
 }
 
 extern TIM_HandleTypeDef htim6;
@@ -45,11 +53,32 @@ void onTimer6() { // 60fps
     putchar(button ? '1' : '0');
   }
   putchar('\n');
+  uint8_t canData[8] = {};
+  canData[0] = (uint8_t) parser->axes.x;
+  canData[1] = (uint8_t) parser->axes.y;
+  canData[2] = (uint8_t) parser->axes.z;
+  canData[3] = (uint8_t) parser->axes.rz;
+  for (size_t i = 0; i < canHeader.DLC - 4; i++) {
+    uint8_t data = 0;
+    for (size_t j = 0; j < 8 && i * 8 + j < parser->buttons.size(); j++) {
+      data |= (uint8_t) parser->buttons[i * 8 + j] << j;
+    }
+    canData[i + 4] = data;
+  }
+  //if (HAL_CAN_IsTxMessagePending(&hcan1, canMailbox)) {
+  while (HAL_CAN_IsTxMessagePending(&hcan1, canMailbox)) {
+    printf("CAN Abort\n");
+    HAL_CAN_AbortTxRequest(&hcan1, canMailbox);
+  }
+  HAL_CAN_AddTxMessage(&hcan1, &canHeader, canData, &canMailbox);
 }
 
 void USBH_HID_EventCallback(USBH_HandleTypeDef* phost) {
   if (!ready) {
     ready = true;
+    const auto dataLength = 4 + parser->buttons.size() / 8 + (parser->buttons.size() % 8 ? 1 : 0);
+    canHeader.DLC = dataLength < 8 ? dataLength : 8;
+    HAL_CAN_Start(&hcan1);
     HAL_TIM_Base_Start_IT(&htim6);
   }
   received = true;
@@ -86,12 +115,13 @@ void userMain() {
       // USBH_HID_SetIdle(&hUsbHostFS, 0x04, 0);
       HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
     } else if (Appli_state != stateA && Appli_state == APPLICATION_DISCONNECT) {
+      ready = false;
+      HAL_CAN_Stop(&hcan1);
+      HAL_TIM_Base_Stop_IT(&htim6);
       printf("Disconnected\n");
       parser.reset();
       reportBuf.reset();
       HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-      ready = false;
-      HAL_TIM_Base_Stop_IT(&htim6);
     } else if (hUsbHostFS.gState != stateH && hUsbHostFS.gState == HOST_ABORT_STATE) {
       printf("Abort\n");
     }

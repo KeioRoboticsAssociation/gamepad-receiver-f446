@@ -32,7 +32,7 @@
     <usedDebug>true</usedDebug>
     	<debugprobe>swd</debugprobe>
     <optimization></optimization>
-    <icfloc>1</icfloc>
+    <icfloc>0</icfloc>
     <Adefines>
         <define></define>
     </Adefines>   
@@ -111,6 +111,9 @@
 							<name>Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_usb.c</name>
 						</file>
 						<file>
+							<name>Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_can.c</name>
+						</file>
+						<file>
 							<name>Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.c</name>
 						</file>
 						<file>
@@ -176,6 +179,10 @@
                                 </file>
 
                                 <file>
+                                 <name>Src/can.c</name>
+                                </file>
+
+                                <file>
                                  <name>Src/tim.c</name>
                                 </file>
 
@@ -234,6 +241,15 @@
                     <name>usbh_conf.c</name>
                                     <file>
                                             <name>Src/usbh_conf.c</name>
+                                    </file>
+                    </group>
+    </group>
+    <group>
+        <name>Src</name>
+                    <group>
+                    <name>can.c</name>
+                                    <file>
+                                            <name>Src/can.c</name>
                                     </file>
                     </group>
     </group>
