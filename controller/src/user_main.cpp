@@ -26,7 +26,6 @@ namespace {
   uint32_t canMailbox;
 }
 
-extern TIM_HandleTypeDef htim6;
 extern USBH_HandleTypeDef hUsbHostFS;
 extern ApplicationTypeDef Appli_state;
 

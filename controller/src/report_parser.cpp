@@ -33,7 +33,7 @@ ReportParser::ReportParser(const uint8_t* reportDescriptor, const size_t length)
       if (current.usagePage == HID_USAGE_PAGE_BUTTON) {
         for (size_t j = 0; j < current.reportCount; j++) {
           controls.push_back(Control {
-            ControlType::Button,
+            ControlType::BUTTON,
             reportSize,
             current.reportSize,
             current.logicalMin,
@@ -46,11 +46,11 @@ ReportParser::ReportParser(const uint8_t* reportDescriptor, const size_t length)
       } else {
         for (auto usage : current.usages) {
           controls.push_back(Control {
-            usage == HID_USAGE_X ? ControlType::Joystick_X :
-            usage == HID_USAGE_Y ? ControlType::Joystick_Y :
-            usage == HID_USAGE_Z ? ControlType::Joystick_Z :
-            usage == HID_USAGE_RZ ? ControlType::Joystick_Rz :
-            usage == HID_USAGE_HATSW ? ControlType::HatSwitch : ControlType::Noop,
+            usage == HID_USAGE_X ? ControlType::JOYSTICK_X :
+            usage == HID_USAGE_Y ? ControlType::JOYSTICK_Y :
+            usage == HID_USAGE_Z ? ControlType::JOYSTICK_Z :
+            usage == HID_USAGE_RZ ? ControlType::JOYSTICK_Rz :
+            usage == HID_USAGE_HATSW ? ControlType::HATSWITCH : ControlType::NOOP,
             reportSize,
             current.reportSize,
             current.logicalMin,
@@ -73,7 +73,7 @@ ReportParser::ReportParser(const uint8_t* reportDescriptor, const size_t length)
       if (reportId) {
         i = length; // break
       } else {
-        controls.push_back(Control {ControlType::Noop, reportSize, 8});
+        controls.push_back(Control {ControlType::NOOP, reportSize, 8});
         reportSize += 8;
         reportId = (uint8_t) readReportDescriptorData(reportDescriptor, i + 1, dataLength);
       }
@@ -105,30 +105,30 @@ ReportParser::ReportParser(const uint8_t* reportDescriptor, const size_t length)
 void ReportParser::parse(const uint8_t* report, const size_t length) {
   size_t buttonIndex = 0;
   for (auto &control : controls) {
-    auto data = readReportData(report, control.index, control.size, control.min < 0);
+    const auto data = readReportData(report, control.index, control.size, control.min < 0);
     if (first) {
       control.neutral = data;
     }
     switch (control.type) {
-    case ControlType::Joystick_X:
+    case ControlType::JOYSTICK_X:
       axes.x = (data - control.neutral) * 100 / (data >= control.neutral ? control.max - control.neutral : control.neutral - control.min);
       break;
-    case ControlType::Joystick_Y:
+    case ControlType::JOYSTICK_Y:
       axes.y = (data - control.neutral) * 100 / (data >= control.neutral ? control.max - control.neutral : control.neutral - control.min);
       break;
-    case ControlType::Joystick_Z:
+    case ControlType::JOYSTICK_Z:
       axes.z = (data - control.neutral) * 100 / (data >= control.neutral ? control.max - control.neutral : control.neutral - control.min);
       break;
-    case ControlType::Joystick_Rz:
+    case ControlType::JOYSTICK_Rz:
       axes.rz = (data - control.neutral) * 100 / (data >= control.neutral ? control.max - control.neutral : control.neutral - control.min);
       break;
-    case ControlType::HatSwitch:
+    case ControlType::HATSWITCH:
       buttons[12] = data - control.min == 7 || data - control.min == 0 || data - control.min == 1;
       buttons[15] = data - control.min >= 1 && data - control.min <= 3;
       buttons[13] = data - control.min >= 3 && data - control.min <= 5;
       buttons[14] = data - control.min >= 5 && data - control.min <= 7;
       break;
-    case ControlType::Button:
+    case ControlType::BUTTON:
       buttons[buttonIndex++] = control.neutral != data;
       if (buttonIndex == 12) {
         buttonIndex = 16;

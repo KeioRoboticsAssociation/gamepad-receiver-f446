@@ -7,30 +7,28 @@
 
 //#include "report_parser_conf.h"
 
-namespace {
-  enum struct ControlType {
-    Joystick_X,
-    Joystick_Y,
-    Joystick_Z,
-    Joystick_Rz,
-    HatSwitch,
-    Button,
-    Noop
-  };
-  struct Control {
-    const ControlType type;
-    const size_t index;
-    const size_t size;
-    const int32_t min;
-    const int32_t max;
-    int32_t neutral;
-  };
-}
-
 class ReportParser {
+  private:
+    enum struct ControlType {
+      JOYSTICK_X,
+      JOYSTICK_Y,
+      JOYSTICK_Z,
+      JOYSTICK_Rz,
+      HATSWITCH,
+      BUTTON,
+      NOOP
+    };
+    struct Control {
+      const ControlType type;
+      const size_t index;
+      const size_t size;
+      const int32_t min;
+      const int32_t max;
+      int32_t neutral;
+    };
   public:
     ReportParser(const uint8_t*, const size_t);
-//    struct {int8_t x; int8_t y; int8_t z; int8_t rz;} axes = {0x0f, 0x0f, 0x0f, 0x0f};
+    //struct {int8_t x; int8_t y; int8_t z; int8_t rz;} axes = {0x0f, 0x0f, 0x0f, 0x0f};
     struct {int8_t x; int8_t y; int8_t z; int8_t rz;} axes = {};
     std::vector<bool> buttons;
     uint8_t reportId = 0;
