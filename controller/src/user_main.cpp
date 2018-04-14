@@ -57,12 +57,14 @@ void onTimer6() { // 60fps
   canData[1] = (uint8_t) parser->axes.y;
   canData[2] = (uint8_t) parser->axes.z;
   canData[3] = (uint8_t) parser->axes.rz;
-  for (size_t i = 0; i < canHeader.DLC - 4; i++) {
+  canData[4] = (uint8_t) parser->buttons.size();
+  //for (size_t i = 0; i < canHeader.DLC - 5; i++) {
+  for (size_t i = 0; i < 3; i++) {
     uint8_t data = 0;
     for (size_t j = 0; j < 8 && i * 8 + j < parser->buttons.size(); j++) {
-      data |= (uint8_t) parser->buttons[i * 8 + j] << j;
+      data |= (uint8_t) parser->buttons[i * 8 + j] <<  (7 - j);
     }
-    canData[i + 4] = data;
+    canData[i + 5] = data;
   }
   //if (HAL_CAN_IsTxMessagePending(&hcan1, canMailbox)) {
   while (HAL_CAN_IsTxMessagePending(&hcan1, canMailbox)) {
@@ -75,8 +77,9 @@ void onTimer6() { // 60fps
 void USBH_HID_EventCallback(USBH_HandleTypeDef* phost) {
   if (!ready) {
     ready = true;
-    const auto dataLength = 4 + parser->buttons.size() / 8 + (parser->buttons.size() % 8 ? 1 : 0);
-    canHeader.DLC = dataLength < 8 ? dataLength : 8;
+    //const auto dataLength = 5 + parser->buttons.size() / 8 + (parser->buttons.size() % 8 ? 1 : 0);
+    //canHeader.DLC = dataLength < 8 ? dataLength : 8;
+    canHeader.DLC = 8;
     HAL_CAN_Start(&hcan1);
     HAL_TIM_Base_Start_IT(&htim6);
   }

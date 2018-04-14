@@ -98,7 +98,7 @@ ReportParser::ReportParser(const uint8_t* reportDescriptor, const size_t length)
     }
     i += dataLength + 1;
   }
-  buttons = std::vector<bool>(buttonNum > 12 ? buttonNum + 4 : 16, false);
+  buttons = std::vector<bool>(buttonNum > 13 ? buttonNum + 4 : 17, false);
   reportLength = reportSize / 8;
 }
 
