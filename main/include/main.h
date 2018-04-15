@@ -3,6 +3,4 @@
 
 int main();
 
-void onUserButtonPressed();
-
 #endif

@@ -57,14 +57,12 @@ void onTimer6() { // 60fps
   canData[1] = (uint8_t) parser->axes.y;
   canData[2] = (uint8_t) parser->axes.z;
   canData[3] = (uint8_t) parser->axes.rz;
-  canData[4] = (uint8_t) parser->buttons.size();
-  //for (size_t i = 0; i < canHeader.DLC - 5; i++) {
-  for (size_t i = 0; i < 3; i++) {
-    uint8_t data = 0;
-    for (size_t j = 0; j < 8 && i * 8 + j < parser->buttons.size(); j++) {
-      data |= (uint8_t) parser->buttons[i * 8 + j] <<  (7 - j);
+  const size_t buttonsNum = parser->buttons.size() <= 24 ? parser->buttons.size() : 24;
+  canData[4] = (uint8_t) buttonsNum;
+  for (size_t i = 0; i < buttonsNum; i++) {
+    if (parser->buttons[i]) {
+      canData[5 + i / 8] |= 0x01 << (7 - i % 8);
     }
-    canData[i + 5] = data;
   }
   //if (HAL_CAN_IsTxMessagePending(&hcan1, canMailbox)) {
   while (HAL_CAN_IsTxMessagePending(&hcan1, canMailbox)) {

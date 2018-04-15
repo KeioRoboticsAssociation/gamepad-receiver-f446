@@ -5,7 +5,7 @@
 #include "controller.h"
 
 namespace {
-  DigitalOut led(LED1, 0);
+  DigitalOut led(LED1, false);
   InterruptIn userButton(USER_BUTTON);
   InterruptIn emergencyButton(PA_4);
   CAN can1(PA_11, PA_12, 500000);
@@ -16,6 +16,8 @@ namespace {
 
 int main(){
   wait(0.5);
+  pc.printf("start");
+  led = true;
   while (true) {
     pc.printf("Axes: %4d %4d %4d %4d ", controller.axes.x, controller.axes.y, controller.axes.z, controller.axes.rz);
     pc.printf("Buttons: ");
