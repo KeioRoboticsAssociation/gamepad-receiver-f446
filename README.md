@@ -18,7 +18,7 @@ USB HIDゲームパッド（いわゆるDirectInput対応ゲームパッド）�
 |500kbps|Standard|`0x334`|
 
 ### データ
-|bite|name|type  |range   |
+|byte|name|type  |range   |
 |:--:|:--:|:----:|:------:|
 |1   |LX  |int8_t|-100~100|
 |2   |LY  |int8_t|-100~100|
