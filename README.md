@@ -3,7 +3,19 @@ USB HIDゲームパッド（いわゆるDirectInput対応ゲームパッド）�
 
 [Download](https://github.com/KeioRoboticsAssociation/gamepad-receiver-f446/releases)
 
-## 接続
+## 対応機種
+標準的なUSB HID(DirectInput)ゲームパッド
+
+### 動作確認済み
+* [ELECOM JC-U2410T](http://www2.elecom.co.jp/peripheral/gamepad/jc-u2410t/)
+* [Buffalo BSGP1204](http://buffalo.jp/product/input/gamepad/bsgp1204/)
+* [Logicool F710](https://gaming.logicool.co.jp/ja-jp/product/f710-wireless-gamepad)
+
+### 不具合あり
+* [Logicool F310](https://gaming.logicool.co.jp/ja-jp/product/f310-gamepad)
+
+## 仕様
+### 接続
 |Nucleo F446-RE|      |
 |:------------:|:----:|
 |PA12(CN10-12) |USB D+|
@@ -11,7 +23,6 @@ USB HIDゲームパッド（いわゆるDirectInput対応ゲームパッド）�
 |PB9(CN10-5)   |CAN Tx|
 |PB8(CN10-3)   |CAN Rx|
 
-## 仕様
 ### フレーム
 |速度|形式|ID|
 |:-----:|:------:|:-----:|
