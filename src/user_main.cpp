@@ -51,7 +51,6 @@ void onTimer6() { // 60fps
   for (auto button : parser->buttons) {
     putchar(button ? '1' : '0');
   }
-  putchar('\n');
   uint8_t canData[8] = {};
   canData[0] = (uint8_t) parser->axes.x;
   canData[1] = (uint8_t) parser->axes.y;
@@ -64,12 +63,13 @@ void onTimer6() { // 60fps
       canData[5 + i / 8] |= 0x01 << (7 - i % 8);
     }
   }
-  //if (HAL_CAN_IsTxMessagePending(&hcan1, canMailbox)) {
+  printf(" CAN:");
   while (HAL_CAN_IsTxMessagePending(&hcan1, canMailbox)) {
-    printf("CAN Abort\n");
+    printf(" Abort");
     HAL_CAN_AbortTxRequest(&hcan1, canMailbox);
   }
   HAL_CAN_AddTxMessage(&hcan1, &canHeader, canData, &canMailbox);
+  putchar('\n');  
 }
 
 void USBH_HID_EventCallback(USBH_HandleTypeDef* phost) {
