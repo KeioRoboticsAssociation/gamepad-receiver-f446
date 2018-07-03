@@ -20,6 +20,7 @@ namespace {
   HOST_StateTypeDef stateH;
   std::unique_ptr<ReportParser> parser;
   std::unique_ptr<uint8_t[]> reportBuf;
+  bool first = false;
   bool ready = false;
   bool received = false;
   CAN_TxHeaderTypeDef canHeader = {CAN_ID, 0, CAN_RTR_DATA, CAN_ID_STD, 0, DISABLE};
@@ -44,8 +45,12 @@ void onTimer6() { // 60fps
     }
     putchar(' ');
   }
+  if (first) {
+    first = false;
+    printf("Drop first report\n");
+    return;
+  }
   parser->parse(reportBuf.get(), parser->reportLength);
-  //printf(parser->axes.x == 0x0f ? "     " : "%4d ", parser->axes.x);
   printf("Axes: %4d %4d %4d %4d ", parser->axes.x, parser->axes.y, parser->axes.z, parser->axes.rz);
   printf("Buttons: ");
   for (auto button : parser->buttons) {
@@ -74,6 +79,7 @@ void onTimer6() { // 60fps
 
 void USBH_HID_EventCallback(USBH_HandleTypeDef* phost) {
   if (!ready) {
+    first = true;
     ready = true;
     //const auto dataLength = 5 + parser->buttons.size() / 8 + (parser->buttons.size() % 8 ? 1 : 0);
     //canHeader.DLC = dataLength < 8 ? dataLength : 8;
