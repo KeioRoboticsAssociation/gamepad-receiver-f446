@@ -33,7 +33,7 @@ class ReportParser {
     std::vector<bool> buttons;
     uint8_t reportId = 0;
     size_t reportLength;
-    void parse(const uint8_t*, const size_t);
+    void parse(const uint8_t*);
   private:
     bool first = true;
     std::vector<Control> controls = {};

@@ -50,7 +50,7 @@ void onTimer6() { // 60fps
     printf("Drop first report\n");
     return;
   }
-  parser->parse(reportBuf.get(), parser->reportLength);
+  parser->parse(reportBuf.get());
   printf("Axes: %4d %4d %4d %4d ", parser->axes.x, parser->axes.y, parser->axes.z, parser->axes.rz);
   printf("Buttons: ");
   for (auto button : parser->buttons) {
