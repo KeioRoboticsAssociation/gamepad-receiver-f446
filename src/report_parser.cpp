@@ -30,23 +30,28 @@ ReportParser::ReportParser(const uint8_t* reportDescriptor, const size_t length)
     const auto type = byte >> 2;
     switch (type) {
     case HID_MAIN_ITEM_TAG_INPUT << 2 | HID_ITEM_TYPE_MAIN:
-      current.usages.resize(current.reportCount, current.usages.empty() ? HID_USAGE_UNDEFINED : current.usages.back());
-      for (auto usage : current.usages) {
-        controls.push_back(Control {
-          current.usagePage == HID_USAGE_PAGE_BUTTON ? ControlType::BUTTON :
-          usage == HID_USAGE_X ? ControlType::JOYSTICK_X :
-          usage == HID_USAGE_Y ? ControlType::JOYSTICK_Y :
-          usage == HID_USAGE_Z ? ControlType::JOYSTICK_Z :
-          usage == HID_USAGE_RZ ? ControlType::JOYSTICK_Rz :
-          usage == HID_USAGE_HATSW ? ControlType::HATSWITCH : ControlType::NOOP,
-          reportSize,
-          current.reportSize,
-          current.logicalMin,
-          current.logicalMax,
-          current.logicalMin
-        });
-        reportSize += current.reportSize;
-        buttonNum += current.usagePage == HID_USAGE_PAGE_BUTTON;
+      if (readReportDescriptorData(reportDescriptor, i + 1, dataLength) & 0x01) {
+        controls.push_back(Control {ControlType::NOOP, reportSize, current.reportSize * current.reportCount});
+        reportSize += current.reportSize * current.reportCount;        
+      } else {
+        current.usages.resize(current.reportCount, current.usages.empty() ? HID_USAGE_UNDEFINED : current.usages.back());
+        for (auto usage : current.usages) {
+          controls.push_back(Control {
+            current.usagePage == HID_USAGE_PAGE_BUTTON ? ControlType::BUTTON :
+            usage == HID_USAGE_X ? ControlType::JOYSTICK_X :
+            usage == HID_USAGE_Y ? ControlType::JOYSTICK_Y :
+            usage == HID_USAGE_Z ? ControlType::JOYSTICK_Z :
+            usage == HID_USAGE_RZ ? ControlType::JOYSTICK_Rz :
+            usage == HID_USAGE_HATSW ? ControlType::HATSWITCH : ControlType::NOOP,
+            reportSize,
+            current.reportSize,
+            current.logicalMin,
+            current.logicalMax,
+            current.logicalMin
+          });
+          reportSize += current.reportSize;
+          buttonNum += current.usagePage == HID_USAGE_PAGE_BUTTON;
+        }
       }
     case HID_MAIN_ITEM_TAG_OUTPUT << 2 | HID_ITEM_TYPE_MAIN:
     case HID_MAIN_ITEM_TAG_COLLECTION << 2 | HID_ITEM_TYPE_MAIN:
