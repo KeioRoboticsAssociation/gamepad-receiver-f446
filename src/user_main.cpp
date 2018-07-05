@@ -69,12 +69,12 @@ void onTimer6() { // 60fps
     }
   }
   printf(" CAN:");
-  while (HAL_CAN_IsTxMessagePending(&hcan1, canMailbox)) {
-    printf(" Abort");
+  if (HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) == 0) {
     HAL_CAN_AbortTxRequest(&hcan1, canMailbox);
+    printf(" Abort");
   }
+  putchar('\n');
   HAL_CAN_AddTxMessage(&hcan1, &canHeader, canData, &canMailbox);
-  putchar('\n');  
 }
 
 void USBH_HID_EventCallback(USBH_HandleTypeDef* phost) {
