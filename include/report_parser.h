@@ -16,7 +16,7 @@ class ReportParser {
       JOYSTICK_Rz,
       HATSWITCH,
       BUTTON,
-      NOOP
+      NOOP,
     };
     struct Control {
       const ControlType type;
