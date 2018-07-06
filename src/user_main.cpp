@@ -99,7 +99,7 @@ void onTimer6() { // 60fps
   case MainState::INIT_DETECT_POLLING_3:
   case MainState::INIT_DETECT_POLLING_4:
   case MainState::INIT_DETECT_POLLING_5:
-    state.main = (MainState) ((int) state.main + 1);
+    state.main = (MainState) ((uint8_t) state.main + 1);
     printf("Detecting whether polling is needed\n");    
     if (state.received) {
       state.polling = false;
@@ -173,6 +173,8 @@ void userMain() {
     }
     case APPLICATION_DISCONNECT:
       state.main = MainState::IDLE;
+      state.received = false;
+      state.polling = true;
       printf("Disconnected\n");
       HAL_CAN_Stop(&hcan1);
       HAL_TIM_Base_Stop_IT(&htim6);
