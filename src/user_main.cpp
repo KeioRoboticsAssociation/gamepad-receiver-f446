@@ -132,7 +132,7 @@ void USBH_HID_EventCallback(USBH_HandleTypeDef* phost) {
 void userInit() {
   state.usbHost = hUsbHostFS.gState;
   state.usbApp = Appli_state;
-  printf("Start\n");
+  printf("gamepad-receiver-f446 v1.2.0 @Piroro-hs\nhttps://github.com/KeioRoboticsAssociation/gamepad-receiver-f446\n");
   // printf("H: %d, ", stateH);
   // printf("A: %d\n", stateA);
 }
