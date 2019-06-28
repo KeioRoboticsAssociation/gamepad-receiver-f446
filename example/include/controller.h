@@ -1,8 +1,8 @@
 #ifndef __CONTROLLER_H__
 #define __CONTROLLER_H__
 
+#include <inttypes.h>
 #include <stddef.h>
-#include <stdint.h>
 #include <vector>
 
 #include <mbed.h>
