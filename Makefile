@@ -37,12 +37,15 @@ AS_INCLUDES =
 CPP_DEFS = -DUSE_HAL_DRIVER -DSTM32F446xx
 CPP_INCLUDES =  \
 -Iinclude \
--Ilib/CubeMX/Inc \
--Ilib/CubeMX/Drivers/CMSIS/Device/ST/STM32F4xx/Include \
--Ilib/CubeMX/Drivers/CMSIS/Include \
+-Ilib/CubeMX/USB_HOST/App \
+-Ilib/CubeMX/USB_HOST/Target \
+-Ilib/CubeMX/Core/Inc \
 -Ilib/CubeMX/Drivers/STM32F4xx_HAL_Driver/Inc \
+-Ilib/CubeMX/Drivers/STM32F4xx_HAL_Driver/Inc/Legacy \
 -Ilib/CubeMX/Middlewares/ST/STM32_USB_Host_Library/Core/Inc \
--Ilib/CubeMX/Middlewares/ST/STM32_USB_Host_Library/Class/HID/Inc
+-Ilib/CubeMX/Middlewares/ST/STM32_USB_Host_Library/Class/HID/Inc \
+-Ilib/CubeMX/Drivers/CMSIS/Device/ST/STM32F4xx/Include \
+-Ilib/CubeMX/Drivers/CMSIS/Include
 
 ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
 

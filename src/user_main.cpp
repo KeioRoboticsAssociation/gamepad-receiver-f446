@@ -5,13 +5,16 @@
 #include <stdint.h>
 
 #include <stm32f4xx_hal.h>
-#include <can.h>
-#include <gpio.h>
-#include <tim.h>
 #include <usb_host.h>
 #include <usbh_hid.h>
 
 #include "report_parser.h"
+
+extern CAN_HandleTypeDef hcan1;
+extern TIM_HandleTypeDef htim6;
+extern UART_HandleTypeDef huart2;
+extern USBH_HandleTypeDef hUsbHostFS;
+extern ApplicationTypeDef Appli_state;
 
 namespace {
   const uint32_t CAN_ID = 0x334;
@@ -19,7 +22,6 @@ namespace {
   enum struct MainState {
     IDLE,
     CONNECTED,
-    INIT_FIRST_RECIEVED,
     INIT_DETECT_POLLING_5,
     INIT_DETECT_POLLING_4,
     INIT_DETECT_POLLING_3,
@@ -40,14 +42,11 @@ namespace {
   uint32_t canMailbox;
 }
 
-extern USBH_HandleTypeDef hUsbHostFS;
-extern ApplicationTypeDef Appli_state;
-
 void onTimer6() { // 60fps
   if (state.received) {
     printf("R ");
     auto HidHandle = (HID_HandleTypeDef*) hUsbHostFS.pActiveClass->pData;
-    fifo_read(&(HidHandle->fifo), reportBuf.get(), parser->reportLength);
+    USBH_HID_FifoRead(&(HidHandle->fifo), reportBuf.get(), parser->reportLength);
   } else if (state.polling) {
     printf("P ");
     USBH_HID_GetReport(&hUsbHostFS, 0x01, parser->reportId, reportBuf.get(), parser->reportLength);
@@ -105,7 +104,7 @@ void onTimer6() { // 60fps
       state.polling = false;
     }
     break;
-  case MainState::INIT_FIRST_RECIEVED:
+  case MainState::CONNECTED:
     state.main = MainState::INIT_DETECT_POLLING_5;
     printf("Drop first report\n");
     break;
@@ -117,16 +116,6 @@ void onTimer6() { // 60fps
 
 void USBH_HID_EventCallback(USBH_HandleTypeDef* phost) {
   state.received = true;
-  if (state.main == MainState::CONNECTED) {
-    state.main = MainState::INIT_FIRST_RECIEVED;
-    HAL_TIM_Base_Start_IT(&htim6);
-    // HAL_Delay(100);
-    // state.main = MainState::READY;
-    // const auto dataLength = 5 + parser->buttons.size() / 8 + (parser->buttons.size() % 8 ? 1 : 0);
-    // canHeader.DLC = dataLength < 8 ? dataLength : 8;
-    // canHeader.DLC = 8;
-    // HAL_CAN_Start(&hcan1);
-  }
 }
 
 void userInit() {
@@ -167,8 +156,9 @@ void userMain() {
       reportBuf.reset(new uint8_t[parser->reportLength]);
       HidHandle->length = HidHandle->length > parser->reportLength / 4 ? parser->reportLength / 4 : HidHandle->length;
       HidHandle->pData = reportBuf.get();
-      fifo_init(&(HidHandle->fifo), hUsbHostFS.device.Data, HID_QUEUE_SIZE * parser->reportLength);
+      USBH_HID_FifoInit(&(HidHandle->fifo), hUsbHostFS.device.Data, HID_QUEUE_SIZE * parser->reportLength);
       HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+      HAL_TIM_Base_Start_IT(&htim6);
       break;
     }
     case APPLICATION_DISCONNECT:
