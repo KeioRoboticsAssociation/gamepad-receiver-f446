@@ -6,9 +6,11 @@ BUILD_DIR = .build
 
 DEBUG = 0
 
-#OPT = -Og
-OPT = -Os
-
+ifeq ($(DEBUG), 1)
+OPT = -Og
+else
+OPT = -O2
+endif
 
 C_SOURCES = $(call rwildcard,src/,*.c) $(call rwildcard,lib/CubeMX/,*.c)
 
@@ -17,12 +19,19 @@ CXX_SOURCES = $(call rwildcard, src/,*.cpp)
 ASM_SOURCES = lib/CubeMX/startup_stm32f446xx.s
 
 PREFIX = arm-none-eabi-
+ifdef GCC_PATH
+CC = $(GCC_PATH)/$(PREFIX)gcc
+CXX = $(GCC_PATH)/$(PREFIX)g++
+AS = $(GCC_PATH)/$(PREFIX)gcc -x assembler-with-cpp
+CP = $(GCC_PATH)/$(PREFIX)objcopy
+SZ = $(GCC_PATH)/$(PREFIX)size
+else
 CC = $(PREFIX)gcc
 CXX = $(PREFIX)g++
 AS = $(PREFIX)gcc -x assembler-with-cpp
 CP = $(PREFIX)objcopy
-AR = $(PREFIX)ar
 SZ = $(PREFIX)size
+endif
 HEX = $(CP) -O ihex
 BIN = $(CP) -O binary -S
 
@@ -32,9 +41,13 @@ FLOAT-ABI = -mfloat-abi=hard
 MCU = $(CPU) -mthumb $(FPU) $(FLOAT-ABI)
 
 AS_DEFS =
+
+CPP_DEFS = \
+-DUSE_HAL_DRIVER \
+-DSTM32F446xx
+
 AS_INCLUDES =
 
-CPP_DEFS = -DUSE_HAL_DRIVER -DSTM32F446xx
 CPP_INCLUDES =  \
 -Iinclude \
 -Ilib/CubeMX/USB_HOST/App \
@@ -49,25 +62,21 @@ CPP_INCLUDES =  \
 
 ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
 
-CPPFLAGS = $(MCU) $(CPP_DEFS) $(CPP_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
-
-CXXFLAGS = -std=c++11 -fno-rtti -fno-exceptions
-
+CPPFLAGS = $(MCU) --specs=nano.specs $(CPP_DEFS) $(CPP_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
 ifeq ($(DEBUG), 1)
 CPPFLAGS += -g -gdwarf-2
 endif
-
 CPPFLAGS += -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)"
+
+CXXFLAGS = -std=c++11 -fno-rtti -fno-exceptions
 
 LDSCRIPT = lib/CubeMX/STM32F446RETx_FLASH.ld
 
-LIBS = -lc -lgcc -lm -lstdc++ -lnosys
-LIBDIR = 
-LDFLAGS = $(MCU) --specs=nano.specs --specs=nosys.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) $(OPT) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections,--relax
+LIBS =
+LIBDIR =
+LDFLAGS = $(MCU) --specs=nano.specs --specs=nosys.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref,--gc-sections
 
 all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET).bin
-#all:
-#	@echo "$(C_SOURCES)"
 
 OBJECTS = $(addprefix $(BUILD_DIR)/,$(notdir $(C_SOURCES:.c=.o)))
 vpath %.c $(sort $(dir $(C_SOURCES)))
@@ -99,6 +108,6 @@ $(BUILD_DIR):
 	mkdir $@		
 
 clean:
-	-rm -rf .dep $(BUILD_DIR)
+	-rm -rf $(BUILD_DIR)
 
--include $(shell mkdir .dep 2>/dev/null) $(wildcard .dep/*)
+-include $(wildcard $(BUILD_DIR)/*.d)
