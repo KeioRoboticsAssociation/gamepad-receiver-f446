@@ -1,25 +1,25 @@
 #include "report_parser.h"
 
+#include <inttypes.h>
 #include <stddef.h>
-#include <stdint.h>
 #include <vector>
 
-#include <usbh_hid.h>
-#include <usbh_hid_usage.h>
+#include "usbh_hid.h"
+#include "usbh_hid_usage.h"
 
 ReportParser::ReportParser(const uint8_t* reportDescriptor, const size_t length) {
   size_t buttonNum = 0;
   size_t reportSize = 0;
   struct {
-    uint32_t usagePage = 0; // Global
-    int32_t logicalMin = 0;
-    int32_t logicalMax = 0;
-    uint32_t reportSize = 0;
-    uint32_t reportCount = 0;
-    std::vector<uint32_t> usages = {}; // Local
-    // uint32_t usageMin = 0;
-    // uint32_t usageMax = 0;
-  } current;
+    uint32_t usagePage; // Global
+    int32_t logicalMin;
+    int32_t logicalMax;
+    uint32_t reportSize;
+    uint32_t reportCount;
+    std::vector<uint32_t> usages; // Local
+    // uint32_t usageMin;
+    // uint32_t usageMax;
+  } current = {};
   size_t i = 0;
   while (i < length) {
     const auto byte = reportDescriptor[i];
@@ -31,12 +31,12 @@ ReportParser::ReportParser(const uint8_t* reportDescriptor, const size_t length)
     switch (type) {
     case HID_MAIN_ITEM_TAG_INPUT << 2 | HID_ITEM_TYPE_MAIN:
       if (readReportDescriptorData(reportDescriptor, i + 1, dataLength) & 0x01) {
-        controls.push_back(Control {ControlType::NOOP, reportSize, current.reportSize * current.reportCount});
+        controls.push_back({ControlType::NOOP, reportSize, current.reportSize * current.reportCount});
         reportSize += current.reportSize * current.reportCount;        
       } else {
         current.usages.resize(current.reportCount, current.usages.empty() ? HID_USAGE_UNDEFINED : current.usages.back());
         for (auto usage : current.usages) {
-          controls.push_back(Control {
+          controls.push_back({
             current.usagePage == HID_USAGE_PAGE_BUTTON ? ControlType::BUTTON :
             usage == HID_USAGE_X ? ControlType::JOYSTICK_X :
             usage == HID_USAGE_Y ? ControlType::JOYSTICK_Y :
@@ -66,9 +66,9 @@ ReportParser::ReportParser(const uint8_t* reportDescriptor, const size_t length)
       if (reportId) {
         i = length; // break
       } else {
-        controls.push_back(Control {ControlType::NOOP, reportSize, 8});
+        controls.push_back({ControlType::NOOP, reportSize, 8});
         reportSize += 8;
-        reportId = (uint8_t) readReportDescriptorData(reportDescriptor, i + 1, dataLength);
+        reportId = readReportDescriptorData(reportDescriptor, i + 1, dataLength);
       }
       break;
     case HID_GLOBAL_ITEM_TAG_REPORT_COUNT << 2 | HID_ITEM_TYPE_GLOBAL:
@@ -91,13 +91,13 @@ ReportParser::ReportParser(const uint8_t* reportDescriptor, const size_t length)
     }
     i += dataLength + 1;
   }
-  buttons = std::vector<bool>(buttonNum > 13 ? buttonNum + 4 : 17, false);
+  buttons.resize(buttonNum > 13 ? buttonNum + 4 : 17);
   reportLength = reportSize / 8;
 }
 
 void ReportParser::parse(const uint8_t* report) {
   size_t buttonIndex = 0;
-  for (auto &control : controls) {
+  for (auto& control : controls) {
     const auto data = readReportData(report, control.index, control.size, control.min < 0);
     if (first) {
       control.neutral = data;
@@ -136,11 +136,7 @@ void ReportParser::parse(const uint8_t* report) {
   }
 }
 
-uint32_t ReportParser::readReportDescriptorData(
-  const uint8_t* reportDescriptor,
-  const size_t index,
-  const size_t length
-) {
+uint32_t ReportParser::readReportDescriptorData(const uint8_t* reportDescriptor, const size_t index, const size_t length) {
   uint32_t data = 0;
   for (size_t i = index + length - 1; i >= index; i--) {
     (data <<= 8) |= reportDescriptor[i];
@@ -148,19 +144,15 @@ uint32_t ReportParser::readReportDescriptorData(
   return data;
 }
 
-int32_t ReportParser::readReportData(
-  const uint8_t* report,
-  const size_t index,
-  const size_t size,
-  const bool isSigned
-) {
+int32_t ReportParser::readReportData(const uint8_t* report, const size_t index, const size_t size, const bool isSigned) {
   uint32_t data = 0;
   for (size_t i = 0; i < size; i++) {
-    data |= (uint32_t) (report[(i + index) / 8] >> (i + index) % 8 & 0x01) << i;
+    data |= (report[(i + index) / 8] >> (i + index) % 8 & 0x01) << i;
   }
-  return isSigned ? castToSigned(data, size) : (int32_t) data;
+  return isSigned ? castToSigned(data, size) : data;
 }
 
 int32_t ReportParser::castToSigned(const uint32_t data, const size_t size) {
-  return data >> (size - 1) ? (int32_t) (data << (32 - size)) >> (32 - size) : (int32_t) data;
+  // return data >> (size - 1) ? INT32_MIN + static_cast<int32_t>((0xFFFFFFFF << (32 - size) | data) & 0x7FFFFFFF) : data;
+  return data >> (size - 1) ? static_cast<int32_t>(data << (32 - size)) >> (32 - size) : data; // C++20未満では処理系定義の動作に依存
 }

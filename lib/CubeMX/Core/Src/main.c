@@ -105,7 +105,7 @@ int main(void)
   MX_TIM6_Init();
   MX_CAN1_Init();
   /* USER CODE BEGIN 2 */
-  userInit();
+  setup();
 
   /* USER CODE END 2 */
 
@@ -113,7 +113,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    userMain();
+    loop();
     /* USER CODE END WHILE */
     MX_USB_HOST_Process();
 

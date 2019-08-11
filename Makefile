@@ -12,11 +12,15 @@ else
 OPT = -O2
 endif
 
-C_SOURCES = $(call rwildcard,src/,*.c) $(call rwildcard,lib/CubeMX/,*.c)
+C_SOURCES = \
+$(call rwildcard,src/,*.c) \
+$(call rwildcard,lib/CubeMX/,*.c)
 
-CXX_SOURCES = $(call rwildcard, src/,*.cpp)
+CXX_SOURCES = \
+$(call rwildcard,src/,*.cpp)
 
-ASM_SOURCES = lib/CubeMX/startup_stm32f446xx.s
+ASM_SOURCES = \
+lib/CubeMX/startup_stm32f446xx.s
 
 PREFIX = arm-none-eabi-
 ifdef GCC_PATH
@@ -48,27 +52,29 @@ CPP_DEFS = \
 
 AS_INCLUDES =
 
-CPP_INCLUDES =  \
--Iinclude \
--Ilib/CubeMX/USB_HOST/App \
--Ilib/CubeMX/USB_HOST/Target \
--Ilib/CubeMX/Core/Inc \
--Ilib/CubeMX/Drivers/STM32F4xx_HAL_Driver/Inc \
--Ilib/CubeMX/Drivers/STM32F4xx_HAL_Driver/Inc/Legacy \
--Ilib/CubeMX/Middlewares/ST/STM32_USB_Host_Library/Core/Inc \
--Ilib/CubeMX/Middlewares/ST/STM32_USB_Host_Library/Class/HID/Inc \
--Ilib/CubeMX/Drivers/CMSIS/Device/ST/STM32F4xx/Include \
--Ilib/CubeMX/Drivers/CMSIS/Include
+CPP_INCLUDES = \
+-Iinclude
+
+CPP_LIB_INCLUDES = \
+-isystemlib/CubeMX/USB_HOST/App \
+-isystemlib/CubeMX/USB_HOST/Target \
+-isystemlib/CubeMX/Core/Inc \
+-isystemlib/CubeMX/Drivers/STM32F4xx_HAL_Driver/Inc \
+-isystemlib/CubeMX/Drivers/STM32F4xx_HAL_Driver/Inc/Legacy \
+-isystemlib/CubeMX/Middlewares/ST/STM32_USB_Host_Library/Core/Inc \
+-isystemlib/CubeMX/Middlewares/ST/STM32_USB_Host_Library/Class/HID/Inc \
+-isystemlib/CubeMX/Drivers/CMSIS/Device/ST/STM32F4xx/Include \
+-isystemlib/CubeMX/Drivers/CMSIS/Include
 
 ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
 
-CPPFLAGS = $(MCU) --specs=nano.specs $(CPP_DEFS) $(CPP_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
+CPPFLAGS = $(MCU) --specs=nano.specs $(CPP_DEFS) $(CPP_INCLUDES) $(CPP_LIB_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
 ifeq ($(DEBUG), 1)
 CPPFLAGS += -g -gdwarf-2
 endif
-CPPFLAGS += -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)"
+CPPFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 
-CXXFLAGS = -std=c++11 -fno-rtti -fno-exceptions
+CXXFLAGS = -std=c++17 -fno-rtti -fno-exceptions -pedantic -Wextra -Wdisabled-optimization -Wdouble-promotion -Wfloat-equal -Wlogical-op -Wmissing-declarations -Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual -Wredundant-decls -Wswitch-default -Wundef
 
 LDSCRIPT = lib/CubeMX/STM32F446RETx_FLASH.ld
 
@@ -85,10 +91,10 @@ vpath %.cpp $(sort $(dir $(CXX_SOURCES)))
 OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(ASM_SOURCES:.s=.o)))
 vpath %.s $(sort $(dir $(ASM_SOURCES)))
 
-$(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR) 
+$(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR)
 	$(CC) -c $(CPPFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
 
-$(BUILD_DIR)/%.o: %.cpp Makefile | $(BUILD_DIR) 
+$(BUILD_DIR)/%.o: %.cpp Makefile | $(BUILD_DIR)
 	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.cpp=.lst)) $< -o $@
 
 $(BUILD_DIR)/%.o: %.s Makefile | $(BUILD_DIR)
@@ -100,14 +106,14 @@ $(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) Makefile
 
 $(BUILD_DIR)/%.hex: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
 	$(HEX) $< $@
-	
+
 $(BUILD_DIR)/%.bin: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
-	$(BIN) $< $@	
-	
+	$(BIN) $< $@
+
 $(BUILD_DIR):
-	mkdir $@		
+	mkdir $@
 
 clean:
-	-rm -rf $(BUILD_DIR)
+	-rm -fR $(BUILD_DIR)
 
 -include $(wildcard $(BUILD_DIR)/*.d)

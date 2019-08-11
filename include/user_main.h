@@ -1,5 +1,5 @@
-#ifndef __USER_MAIN_H__
-#define __USER_MAIN_H__
+#ifndef USER_MAIN_H_
+#define USER_MAIN_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -7,9 +7,9 @@ extern "C" {
 
 void onTimer6();
 
-void userInit();
+void setup();
 
-void userMain();
+void loop();
 
 #ifdef __cplusplus
 }
