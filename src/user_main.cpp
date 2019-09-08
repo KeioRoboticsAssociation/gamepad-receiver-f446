@@ -20,6 +20,7 @@ namespace {
   enum struct MainState {
     IDLE,
     CONNECTED,
+    INIT_FIRST_RECIEVED,
     INIT_DETECT_POLLING_5,
     INIT_DETECT_POLLING_4,
     INIT_DETECT_POLLING_3,
@@ -107,7 +108,7 @@ void onTimer6() { // 60fps
         state.app.polling = false;
       }
       break;
-    case MainState::CONNECTED:
+    case MainState::INIT_FIRST_RECIEVED:
       state.app.main = MainState::INIT_DETECT_POLLING_5;
       printf("Drop first report\n");
       break;
@@ -119,6 +120,10 @@ void onTimer6() { // 60fps
 
 void USBH_HID_EventCallback(USBH_HandleTypeDef* phost) {
   state.app.received = true;
+  if (state.app.main == MainState::CONNECTED) {
+    state.app.main = MainState::INIT_FIRST_RECIEVED;
+    HAL_TIM_Base_Start_IT(&htim6);
+  }
 }
 
 void setup() {
@@ -156,7 +161,6 @@ void loop() {
       hidHandle->pData = reportBuf.get();
       USBH_HID_FifoInit(&(hidHandle->fifo), hUsbHostFS.device.Data, HID_QUEUE_SIZE * parser->reportLength);
       HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-      HAL_TIM_Base_Start_IT(&htim6);
       break;
     }
     case APPLICATION_DISCONNECT:
