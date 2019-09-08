@@ -44,7 +44,7 @@ namespace {
   } state = {};
   std::unique_ptr<ReportParser> parser;
   std::unique_ptr<uint8_t[]> reportBuf;
-  CAN_TxHeaderTypeDef canHeader = {CAN_ID, 0, CAN_RTR_DATA, CAN_ID_STD, 0, DISABLE};
+  CAN_TxHeaderTypeDef canHeader = {CAN_ID, 0, CAN_RTR_DATA, CAN_ID_STD, 8, DISABLE};
   uint32_t canMailbox;
 }
 
@@ -71,7 +71,7 @@ void onTimer6() { // 60fps
       parser->parse(reportBuf.get());
       printf("Axes: %4d %4d %4d %4d ", parser->axes.x, parser->axes.y, parser->axes.z, parser->axes.rz);
       printf("Buttons: ");
-      for (auto button : parser->buttons) {
+      for (const auto& button : parser->buttons) {
         putchar(button ? '1' : '0');
       }
       uint8_t canData[8] = {};
@@ -96,7 +96,6 @@ void onTimer6() { // 60fps
       break;
     }
     case MainState::INIT_DETECT_POLLING_1:
-      canHeader.DLC = 8;
       HAL_CAN_Start(&hcan1);
     case MainState::INIT_DETECT_POLLING_2:
     case MainState::INIT_DETECT_POLLING_3:
@@ -160,7 +159,7 @@ void loop() {
       hidHandle->length = parser->reportLength;
       hidHandle->pData = reportBuf.get();
       USBH_HID_FifoInit(&(hidHandle->fifo), hUsbHostFS.device.Data, HID_QUEUE_SIZE * parser->reportLength);
-      HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+      HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET); // LD2
       break;
     }
     case APPLICATION_DISCONNECT:
@@ -170,7 +169,7 @@ void loop() {
       HAL_TIM_Base_Stop_IT(&htim6);
       parser.reset();
       reportBuf.reset();
-      HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+      HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET); // LD2
       break;
     default:
       break;
