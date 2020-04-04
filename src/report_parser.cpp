@@ -153,6 +153,6 @@ int32_t ReportParser::readReportData(const uint8_t* report, const size_t index, 
 }
 
 int32_t ReportParser::castToSigned(const uint32_t data, const size_t size) {
-  // return data >> (size - 1) ? INT32_MIN + static_cast<int32_t>((0xFFFFFFFF << (32 - size) | data) & 0x7FFFFFFF) : data;
+  // return data >> size - 1 ? INT32_MIN + static_cast<int32_t>((~(0xFFFFFFFF >> 32 - size) | data) & 0x7FFFFFFF) : data;
   return data >> (size - 1) ? static_cast<int32_t>(data << (32 - size)) >> (32 - size) : data; // C++20未満では処理系定義の動作に依存
 }
